@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  be:
+    build: .
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/app/nestjs
+      - /app/nestjs/node_modules
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=true
+      - MYSQL_DATABASE=nestjs-db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+    ports:
+      - 3307:3306
+
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
