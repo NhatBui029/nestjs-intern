@@ -6,6 +6,7 @@ import { MemberDTO } from './dto/member.dto';
 import { Ticket } from 'src/entities/ticket.entity';
 import { List, SetTicketDTO } from './dto/setTicket.dto';
 import { Role } from 'src/entities/role.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class MemberService {
@@ -13,7 +14,8 @@ export class MemberService {
     @InjectRepository(Member)
     private readonly memberReposioty: Repository<Member>,
     @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>
+    private readonly roleRepository: Repository<Role>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async getMember(condition: any): Promise<Member[]> {
@@ -23,6 +25,13 @@ export class MemberService {
         roles: true,
     },
     });
+  }
+
+  async getMe(token: string): Promise<Object>{
+    const verifyAsync = await this.jwtService.verifyAsync(token, {
+      secret: process.env.SECRET_KEY,
+    });
+    return {name: verifyAsync?.username};
   }
 
   async getTicket(id: number): Promise<Ticket[]> {

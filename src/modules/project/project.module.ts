@@ -15,14 +15,15 @@ import { HideTicketContent } from './middlewares/hiddenTicketContent.middleware'
 import { Ticket } from 'src/entities/ticket.entity';
 import { Member } from 'src/entities/member.entity';
 import { MemberService } from '../member/member.service';
-import { CheckLoginMiddleware } from '../../middlewares/checkLogin.middleware';
+import { CheckAuthenticationMiddleware } from '../../middlewares/checkAuthentication.middleware';
 import { Role } from 'src/entities/role.entity';
+import JwtRedisService from '../auth/redis-jwt.service';
 
 
 @Module({
   imports: [TypeOrmModule.forFeature([Project, Member, Role])],
   controllers: [ProjectController],
-  providers: [ProjectService, MemberService],
+  providers: [ProjectService, MemberService, JwtRedisService],
   exports: [ProjectService],
 })
 export class ProjectModule implements NestModule {
@@ -33,6 +34,6 @@ export class ProjectModule implements NestModule {
         { path: '/project/add', method: RequestMethod.POST },
         { path: '/project/edit', method: RequestMethod.PUT },
       )
-    consumer.apply(CheckLoginMiddleware).forRoutes(ProjectController)
+    consumer.apply(CheckAuthenticationMiddleware).forRoutes(ProjectController)
   }
 }

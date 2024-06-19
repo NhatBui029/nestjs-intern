@@ -11,13 +11,15 @@ import { CheckListTicketNumber } from './middlewares/checkListTicketNumber.middl
 import { Ticket } from 'src/entities/ticket.entity';
 import { TicketService } from '../ticket/ticket.service';
 import { BcryptService } from '../auth/bcrypt.service';
-import { CheckLoginMiddleware } from '../../middlewares/checkLogin.middleware';
+import { CheckAuthenticationMiddleware } from '../../middlewares/checkAuthentication.middleware';
 import { Role } from 'src/entities/role.entity';
+import JwtRedisService from '../auth/redis-jwt.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Member, Ticket, Role])],
   controllers: [MemberController],
-  providers: [MemberService, TicketService, BcryptService],
+  providers: [MemberService, TicketService, BcryptService, JwtRedisService, JwtService],
   exports: [MemberService],
 })
 export class MemberModule implements NestModule {
@@ -29,6 +31,6 @@ export class MemberModule implements NestModule {
         { path: '/member/edit', method: RequestMethod.PUT }
       )
     consumer.apply(CheckListTicketNumber).forRoutes('/member/set-ticket')
-    consumer.apply(CheckLoginMiddleware).forRoutes(MemberController)
+    consumer.apply(CheckAuthenticationMiddleware).forRoutes(MemberController)
   }
 }

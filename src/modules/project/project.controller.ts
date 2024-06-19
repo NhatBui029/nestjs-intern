@@ -30,6 +30,12 @@ export class ProjectController {
     return await this.projectService.addProject(project);
   }
 
+  @Post('/add-million')
+  @Roles(Role.Admin)
+  async addMillion(): Promise<string> {
+    return await this.projectService.addMillion();
+  }
+
   @Put('/edit')
   @Roles(Role.Admin)
   async editProject(@Body() project: ProjectDTO): Promise<Object> {

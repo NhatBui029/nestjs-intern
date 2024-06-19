@@ -8,7 +8,7 @@ export const dbdatasource: DataSourceOptions = {
   database: 'nestjs-db',
   entities: ['dist/src/entities/*.entity.js'],
   migrations: ['dist/src/migrations/*.js'],
-  synchronize: false,
+  synchronize: true,
   migrationsTableName: 'nestjs_migrations',
 };
 

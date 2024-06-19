@@ -6,14 +6,15 @@ import { TicketService } from './ticket.service';
 import { CheckDateValid } from './middlewares/checkDateValid.middleware';
 import { Project } from 'src/entities/project.entity';
 import { ProjectService } from '../project/project.service';
-import { CheckLoginMiddleware } from '../../middlewares/checkLogin.middleware';
+import { CheckAuthenticationMiddleware } from '../../middlewares/checkAuthentication.middleware';
+import JwtRedisService from '../auth/redis-jwt.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Ticket]),
   ],
   controllers: [TicketController],
-  providers: [TicketService],
+  providers: [TicketService, JwtRedisService],
   exports: [TicketService],
 })
 export class TicketModule implements NestModule {
@@ -24,6 +25,6 @@ export class TicketModule implements NestModule {
         { path: '/ticket/add', method: RequestMethod.POST },
         { path: '/ticket/edit', method: RequestMethod.PUT },
       );
-    consumer.apply(CheckLoginMiddleware).forRoutes(TicketController)
+    consumer.apply(CheckAuthenticationMiddleware).forRoutes(TicketController)
   }
 }

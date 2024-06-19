@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -32,8 +33,8 @@ export class MemberController {
     private readonly bcryptService: BcryptService,
   ) {}
 
-  @Post('/search')
-  async search(@Body() info: SearchMemberDTO): Promise<Member[]> {
+  @Get('/search')
+  async search(@Query() info: SearchMemberDTO): Promise<Member[]> {
     return await this.memberService.searchMember(info.text);
   }
 
@@ -75,6 +76,12 @@ export class MemberController {
     if (tickets.length !== listTicket.length)
       return { status: false, message: 'One or more tickets do not exist.' };
     return await this.memberService.setTicket(id, listTicket);
+  }
+
+  @Post('/me')
+  async getMe(@Body('token') token: string): Promise<Object> {
+    console.log('me')
+    return await this.memberService.getMe( token );
   }
 
   @Get('/all')

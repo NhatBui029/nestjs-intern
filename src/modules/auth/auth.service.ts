@@ -4,6 +4,8 @@ import { LoginDTO } from './dto/login.dto';
 import { BcryptService } from './bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
 import { PayloadDTO } from './dto/payload.dto';
+import JwtRedis from './redis-jwt.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -11,21 +13,26 @@ export class AuthService {
     private readonly memberService: MemberService,
     private readonly bcryptService: BcryptService,
     private readonly jwtService: JwtService,
+    private readonly jwtRedisService: JwtRedis,
   ) {}
 
   private async generateToken(payload: PayloadDTO): Promise<Object> {
     const [accessToken, refreshToken]: [string, string] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        expiresIn: '1m',
-        secret: process.env.SECRET_KEY,
-      }),
-      this.jwtService.signAsync(payload, {
-        expiresIn: '5m',
-        secret: process.env.REFRESH_KEY,
-      }),
+      this.jwtRedisService.setRedis(
+        payload,
+        process.env.SECRET_KEY,
+        '1m',
+        `token`,
+      ),
+      this.jwtRedisService.setRedis(
+        payload,
+        process.env.REFRESH_KEY,
+        '5m',
+        'refreshToken',
+      ),
     ]);
 
-    return { accessToken, refreshToken };
+    return {status: true, accessToken, refreshToken };
   }
 
   async refreshToken(refresh_token: string): Promise<Object> {
@@ -37,6 +44,8 @@ export class AuthService {
       const payload: PayloadDTO = {
         id: verifyAsync.id,
         username: verifyAsync.username,
+        roles: verifyAsync.roles,
+        redisId: uuidv4()
       };
 
       return this.generateToken(payload);
@@ -60,12 +69,28 @@ export class AuthService {
     )
       return { status: false, message: 'Password is incorrect !' };
 
-    const payload = {
+    const payload: PayloadDTO = {
       id: members[0].id,
       username: members[0].username,
       roles: members[0]?.roles?.map((role) => role.name),
+      redisId: uuidv4(),
     };
 
     return this.generateToken(payload);
+  }
+
+  async logout(token: string) {
+    try {
+      const decode = await this.jwtService.verify(token, {
+        secret: process.env.SECRET_KEY,
+      });
+
+      const [result1, result2] = await this.jwtRedisService.destroy(decode.id)
+
+      if (result1 == 1 && result2 == 1)
+        return { status: true, message: 'Logout success !' };
+    } catch (error) {
+      throw new Error('Can not remove redis key');
+    }
   }
 }

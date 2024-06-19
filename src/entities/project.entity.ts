@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index
 } from 'typeorm';
 
 import { Entity } from 'typeorm';
@@ -22,6 +23,7 @@ export class Project {
   name: string;
 
   @Column({ nullable: true })
+  @Index()
   startDate: Date;
 
   @Column({ nullable: true })
@@ -31,6 +33,7 @@ export class Project {
     type: 'enum',
     enum: ['LABOUR', 'FIX_PRICE', 'MAINTENANCE'], 
   })
+  @Index()
   projectType: ProjectType;
 
   @Column({ nullable: true })

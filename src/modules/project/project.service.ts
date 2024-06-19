@@ -1,4 +1,4 @@
-import { Project } from './../../entities/project.entity';
+import { Project, ProjectType } from './../../entities/project.entity';
 import { Repository, Like } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,7 +15,7 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectReposioty: Repository<Project>,
-    private readonly memberService : MemberService
+    private readonly memberService: MemberService,
   ) {}
 
   async getTicket(id: number): Promise<Ticket[]> {
@@ -26,6 +26,42 @@ export class ProjectService {
       },
     });
     return project.tickets;
+  }
+
+  getRandomProjectType(): ProjectType {
+    const projectTypes: ProjectType[] = ['LABOUR', 'FIX_PRICE', 'MAINTENANCE'];
+    const randomIndex = Math.floor(Math.random() * projectTypes.length);
+    return projectTypes[randomIndex];
+  }
+  getRandomDate(start: Date, end: Date): Date {
+    const randomTime =
+      start.getTime() + Math.random() * (end.getTime() - start.getTime());
+    return new Date(randomTime);
+  }
+
+  formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  async addMillion(): Promise<string> {
+    const startDate = new Date(2024, 0, 1); 
+    const endDate = new Date(2024, 11, 31, 23, 59, 59);
+    for (let i = 0; i < 1000000; i++) {
+      const proj: ProjectDTO = {
+        name: 'project' + (i + 106).toString(),
+        projectType: this.getRandomProjectType(),
+        profit: Math.floor(Math.random() * (1000 - 100 + 1)) + 100,
+        startDate: (this.getRandomDate(startDate, endDate))
+      };
+      await this.addProject(proj)
+    }
+    return 'create 100000 project successfull';
   }
 
   async addProject(project: ProjectDTO): Promise<Object> {
@@ -90,10 +126,15 @@ export class ProjectService {
         const projectData = [];
 
         for (const ticket of project.tickets) {
-          const assignee = await this.memberService.getMemberAssignedToTicket(ticket.id);
+          const assignee = await this.memberService.getMemberAssignedToTicket(
+            ticket.id,
+          );
 
           projectData.push({
-            ProjectName: projectData.length === 0 ? project.name : ' '.repeat(project.name.length),
+            ProjectName:
+              projectData.length === 0
+                ? project.name
+                : ' '.repeat(project.name.length),
             TicketId: ticket.id,
             TicketTitle: ticket.title,
             AssigneeName: assignee ? assignee.name : 'Unassigned',
@@ -109,7 +150,6 @@ export class ProjectService {
       await csvWriter.writeRecords(csvData);
 
       return 'tickets.csv';
-
     } catch (error) {
       console.log(error);
     }
